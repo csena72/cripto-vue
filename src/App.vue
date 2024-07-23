@@ -1,32 +1,16 @@
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive } from 'vue'
 import Alerta from './components/Alerta.vue'
 import Spinner from './components/Spinner.vue'
+import useCripto from './composables/useCripto'
 
 
-const monedas = ref([
-  { codigo: 'USD', texto: 'Dolar de Estados Unidos'},
-  { codigo: 'EUR', texto: 'Euro'},
-  { codigo: 'GBP', texto: 'Libra Esterlina'},
-  { codigo: 'ARS', texto: 'Peso Argentino'},
-  { codigo: 'MXN', texto: 'Peso Mexicano'},
-])
-
-const criptomonedas = ref([])
+const { monedas, criptomonedas, loading, cotizacion, obtenerCotizacion, mostrarResultado } = useCripto()
 const error = ref('')
-const cotizacion = ref({})
-const loading = ref(false)
 
 const cotizar = reactive({
   moneda: '',
   criptomoneda: '',
-})
-
-onMounted(() => {
-  const url = 'https://min-api.cryptocompare.com/data/top/mktcapfull?limit=20&tsym=USD'
-  fetch(url)
-    .then(res => res.json())
-    .then(({ Data }) => criptomonedas.value = Data)
 })
 
 const cotizarCripto = () => {
@@ -38,31 +22,8 @@ const cotizarCripto = () => {
     return
   }
   
-  obtenerCotizacion()
+  obtenerCotizacion(cotizar)
 }
-
-const obtenerCotizacion = async () => {
-  const { moneda, criptomoneda } = cotizar
-  loading.value = true
-  cotizacion.value = {}
-
-  try {
-    const url = `https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${criptomoneda},&tsyms=${moneda}`
-    const res = await fetch(url)
-    const data = await res.json()
-    cotizacion.value = data.DISPLAY[criptomoneda][moneda]
-
-  } catch (error) {
-    console.console.log(error)
-
-  } finally {
-    loading.value = false
-  }
-}
-
-const MostrarResultado = computed(() => {
-  return Object.values(cotizacion.value).length > 0
-})
 
 </script>
 
@@ -117,7 +78,7 @@ const MostrarResultado = computed(() => {
       <Spinner v-if="loading" />
 
       <div
-        v-if="MostrarResultado" 
+        v-if="mostrarResultado" 
         class="contenedor-resultado"
       >
         <h2>Cotización</h2>
