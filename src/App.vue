@@ -1,6 +1,7 @@
 <script setup>
-import { ref, reactive, onMounted, computed } from "vue"
+import { ref, reactive, onMounted, computed } from 'vue'
 import Alerta from './components/Alerta.vue'
+import Spinner from './components/Spinner.vue'
 
 
 const monedas = ref([
@@ -14,6 +15,7 @@ const monedas = ref([
 const criptomonedas = ref([])
 const error = ref('')
 const cotizacion = ref({})
+const loading = ref(false)
 
 const cotizar = reactive({
   moneda: '',
@@ -40,15 +42,22 @@ const cotizarCripto = () => {
 }
 
 const obtenerCotizacion = async () => {
-
   const { moneda, criptomoneda } = cotizar
-  
-  const url = `https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${criptomoneda},&tsyms=${moneda}`
-  
-  const res = await fetch(url)
-  const data = await res.json()
+  loading.value = true
+  cotizacion.value = {}
 
-  cotizacion.value = data.DISPLAY[criptomoneda][moneda]
+  try {
+    const url = `https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${criptomoneda},&tsyms=${moneda}`
+    const res = await fetch(url)
+    const data = await res.json()
+    cotizacion.value = data.DISPLAY[criptomoneda][moneda]
+
+  } catch (error) {
+    console.console.log(error)
+
+  } finally {
+    loading.value = false
+  }
 }
 
 const MostrarResultado = computed(() => {
@@ -105,7 +114,9 @@ const MostrarResultado = computed(() => {
           <input type="submit" value="Cotizar" />
       </form>
 
-      <div 
+      <Spinner v-if="loading" />
+
+      <div
         v-if="MostrarResultado" 
         class="contenedor-resultado"
       >
